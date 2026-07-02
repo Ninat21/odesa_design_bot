@@ -5,12 +5,15 @@ from aiogram import Dispatcher
 from app.bot import bot
 
 from app.handlers.welcome import router as welcome_router
+from app.handlers.setup import router as setup_router
 
 
 async def main():
     dp = Dispatcher()
 
     dp.include_router(welcome_router)
+
+    dp.include_router(setup_router)
 
     print("Бот запущено 🚀")
 
