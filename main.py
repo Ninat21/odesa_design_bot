@@ -2,11 +2,15 @@ import asyncio
 
 from aiogram import Dispatcher
 
-from bot import bot
+from app.bot import bot
+
+from app.handlers.welcome import router as welcome_router
 
 
 async def main():
     dp = Dispatcher()
+
+    dp.include_router(welcome_router)
 
     print("Бот запущено 🚀")
 
@@ -15,3 +19,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+    
