@@ -7,6 +7,11 @@ load_dotenv()
 class Config:
     BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+    ADMIN_IDS = [
+        386918180, # Даша
+        1411653442, # Саша
+    ]
+
     COMMUNITY_NAME = "Дизайн Спільнота Одеси"
 
     INSTAGRAM = ""
