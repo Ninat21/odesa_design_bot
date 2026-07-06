@@ -1,5 +1,6 @@
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -7,9 +8,13 @@ load_dotenv()
 class Config:
     BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+    API_ID = int(os.getenv("API_ID"))
+    API_HASH = os.getenv("API_HASH")
+    PHONE = os.getenv("PHONE")
+
     ADMIN_IDS = [
-        386918180, # Даша
-        1411653442, # Саша
+        386918180,  # Даша
+        1411653442,  # Саша
     ]
 
     COMMUNITY_NAME = "Дизайн Спільнота Одеси"
@@ -19,6 +24,8 @@ class Config:
     LUMA = ""
 
     GROUP_ID = 0
+
+
 
 class Links:
     ABOUT = "https://t.me/c/2511970112/3732"

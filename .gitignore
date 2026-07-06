@@ -21,3 +21,11 @@ exports/
 # OS
 .DS_Store
 Thumbs.db
+
+telegram_session.session
+telegram_session.session-journal
+
+__pycache__/
+*.pyc
+
+.env

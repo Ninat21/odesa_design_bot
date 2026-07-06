@@ -1,18 +1,30 @@
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from aiogram import Router
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram.exceptions import TelegramForbiddenError
 
-from app.database.crud import get_stats
+from app.database.models import Message as DBMessage
+from app.database.models import User
 from app.filters.admin import AdminFilter
 
 router = Router()
 
 
 @router.message(Command("stats"), AdminFilter())
-async def stats(message: Message):
+async def stats(
+    message: Message,
+    session: AsyncSession,
+):
+    users = await session.scalar(
+        select(func.count(User.id))
+    )
 
-    users, messages = get_stats()
+    messages = await session.scalar(
+        select(func.count(DBMessage.id))
+    )
 
     text = f"""
 📊 <b>Статистика спільноти</b>
@@ -31,7 +43,6 @@ async def stats(message: Message):
             await message.delete()
 
     except TelegramForbiddenError:
-
         await message.reply(
             "❗️Спочатку відкрийте особистий чат із ботом і натисніть /start."
         )

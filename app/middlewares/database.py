@@ -1,31 +1,43 @@
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message
+from aiogram.types import TelegramObject
 
-from app.database.crud import add_message_from_aiogram, add_user
+from app.database.database import SessionLocal
+from app.database.uow import UnitOfWork
+from app.services.factory import ServiceFactory
 
 
 class DatabaseMiddleware(BaseMiddleware):
-
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
-        data: Dict[str, Any],
+        handler: Callable[
+            [TelegramObject, dict[str, Any]],
+            Awaitable[Any],
+        ],
+        event: TelegramObject,
+        data: dict[str, Any],
     ) -> Any:
 
-        if isinstance(event, Message):
+        async with SessionLocal() as session:
 
-            if event.from_user:
+            data["session"] = session
 
-                add_user(
-                    telegram_id=event.from_user.id,
-                    username=event.from_user.username,
-                    first_name=event.from_user.first_name,
-                    last_name=event.from_user.last_name,
-                )
+            uow = UnitOfWork(session)
+            services = ServiceFactory(uow)
 
-                add_message_from_aiogram(event)
+            data["uow"] = uow
+            data["services"] = services
 
-        return await handler(event, data)
+            try:
+                result = await handler(event, data)
+
+                await session.commit()
+
+                return result
+
+            except Exception:
+
+                await session.rollback()
+
+                raise

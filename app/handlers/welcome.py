@@ -3,8 +3,8 @@ from aiogram.filters import ChatMemberUpdatedFilter
 from aiogram.filters.chat_member_updated import IS_NOT_MEMBER, MEMBER
 from aiogram.types import ChatMemberUpdated
 
-from app.texts.welcome import WELCOME_TEXT
 from app.keyboards.start import start_keyboard
+from app.texts.welcome import WELCOME_TEXT
 
 router = Router()
 
@@ -16,7 +16,7 @@ async def welcome_new_member(event: ChatMemberUpdated):
     user = event.new_chat_member.user
 
     await event.bot.send_message(
-         chat_id=event.chat.id,
-         text=WELCOME_TEXT.format(name=user.mention_html()),
-         reply_markup=start_keyboard(),
+        chat_id=event.chat.id,
+        text=WELCOME_TEXT.format(name=user.mention_html()),
+        reply_markup=start_keyboard(),
     )
