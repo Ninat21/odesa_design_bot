@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import app.database.models  # noqa: F401
 from alembic import context
-from app.database.database import Base
+from app.database.database import Base, normalize_database_url
 
 load_dotenv()
 
@@ -22,7 +22,7 @@ if not database_url:
 
 config.set_main_option(
     "sqlalchemy.url",
-    database_url.replace("sslmode=require", "ssl=require").replace("%", "%%"),
+    normalize_database_url(database_url).replace("%", "%%"),
 )
 
 if config.config_file_name is not None:
