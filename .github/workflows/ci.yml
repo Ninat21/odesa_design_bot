@@ -31,6 +31,8 @@ jobs:
       BOT_TOKEN: 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/odesa_test
       TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/odesa_test
+      ADMIN_IDS: 123456789,987654321
+      GROUP_ID: -1002511970112
 
     steps:
       - uses: actions/checkout@v7

@@ -214,6 +214,8 @@ tests/
 
 Основная документация проекта находится в папке `docs/`.
 
+- [Deployment](deployment.md) — резервная копия, миграции, выпуск и откат
+
 - Vision
 - Architecture
 - Database Design

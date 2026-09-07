@@ -11,6 +11,7 @@ from app.handlers.ping import router as ping_router
 from app.handlers.setup import router as setup_router
 from app.handlers.stats import router as stats_router
 from app.handlers.welcome import router as welcome_router
+from app.health import start_health_server
 from app.middlewares.database import DatabaseMiddleware
 from app.middlewares.error import ErrorMiddleware
 from app.middlewares.message_persistence import MessagePersistenceMiddleware
@@ -18,6 +19,7 @@ from app.middlewares.message_persistence import MessagePersistenceMiddleware
 
 async def main():
     dp = Dispatcher()
+    health_runner = await start_health_server()
 
     # Middleware
     dp.update.middleware(ErrorMiddleware())
@@ -33,9 +35,12 @@ async def main():
     dp.include_router(statistics_router)
     # dp.include_router(welcome_new_router)
 
-    logger.info("Бот запущений")
-    await bot.delete_webhook(drop_pending_updates=False)
-    await dp.start_polling(bot)
+    try:
+        logger.info("Бот запущений")
+        await bot.delete_webhook(drop_pending_updates=False)
+        await dp.start_polling(bot)
+    finally:
+        await health_runner.cleanup()
 
 
 if __name__ == "__main__":

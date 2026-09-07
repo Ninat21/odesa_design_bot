@@ -12,6 +12,20 @@ def required_env(name: str) -> str:
     return value
 
 
+def required_int_list(name: str) -> tuple[int, ...]:
+    value = required_env(name)
+
+    try:
+        values = tuple(int(item.strip()) for item in value.split(",") if item.strip())
+    except ValueError as error:
+        raise RuntimeError(f"{name} має містити ID, розділені комами") from error
+
+    if not values:
+        raise RuntimeError(f"{name} не містить жодного ID")
+
+    return values
+
+
 class Config:
     BOT_TOKEN = required_env("BOT_TOKEN")
 
@@ -19,10 +33,7 @@ class Config:
     API_HASH = os.getenv("API_HASH")
     PHONE = os.getenv("PHONE")
 
-    ADMIN_IDS = [
-        386918180,  # Даша
-        1411653442,  # Саша
-    ]
+    ADMIN_IDS = required_int_list("ADMIN_IDS")
 
     COMMUNITY_NAME = "Дизайн Спільнота Одеси"
 
@@ -30,7 +41,7 @@ class Config:
 
     LUMA = ""
 
-    GROUP_ID = int(os.getenv("GROUP_ID", "-1002511970112"))
+    GROUP_ID = int(required_env("GROUP_ID"))
 
 
 class Links:

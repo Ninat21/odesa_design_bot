@@ -20,6 +20,10 @@ Copy-Item .env.example .env
 .\.venv\Scripts\python.exe main.py
 ```
 
+Обязательные переменные: `BOT_TOKEN`, `DATABASE_URL`, `GROUP_ID` и
+`ADMIN_IDS`. Несколько Telegram ID администраторов указываются через запятую.
+`HEALTH_PORT` необязателен и по умолчанию равен `8080`.
+
 Для production достаточно зависимостей из `requirements.txt`.
 
 ## Проверки
@@ -69,3 +73,5 @@ GitHub Actions автоматически создаёт одноразовую 
 сбросом рабочей базы обязательно сделайте резервную копию.
 
 Расширенная документация проекта находится в каталоге [`docs`](docs/README.md).
+Инструкция по безопасному выпуску находится в
+[`docs/deployment.md`](docs/deployment.md).
