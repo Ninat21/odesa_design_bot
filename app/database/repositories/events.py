@@ -43,7 +43,7 @@ class EventRepository(BaseRepository[Event]):
 
         self.db.add(event)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(event)
 
         return event
@@ -51,11 +51,11 @@ class EventRepository(BaseRepository[Event]):
     async def save(self, event: Event) -> Event:
         self.db.add(event)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(event)
 
         return event
 
     async def delete(self, event: Event) -> None:
         await self.db.delete(event)
-        await self.db.commit()
+        await self.db.flush()

@@ -5,39 +5,44 @@ from app.telethon.client import client
 
 
 async def authorize():
+    if not Config.PHONE:
+        raise RuntimeError("PHONE потрібен для першої авторизації Telethon")
+
     await client.connect()
 
-    if not await client.is_user_authorized():
+    try:
+        if not await client.is_user_authorized():
 
-        await client.send_code_request(
-            Config.PHONE,
-        )
-
-        code = input("Введіть код із Telegram: ")
-
-        try:
-            await client.sign_in(
+            await client.send_code_request(
                 Config.PHONE,
-                code,
             )
 
-        except SessionPasswordNeededError:
+            code = input("Введіть код із Telegram: ")
 
-            password = input(
-                "Введіть пароль двоетапної автентифікації: "
-            )
+            try:
+                await client.sign_in(
+                    Config.PHONE,
+                    code,
+                )
 
-            await client.sign_in(
-                password=password,
-            )
+            except SessionPasswordNeededError:
 
-    me = await client.get_me()
+                password = input(
+                    "Введіть пароль двоетапної автентифікації: "
+                )
 
-    print()
-    print("=" * 50)
-    print(f"Успішний вхід як: {me.first_name}")
-    print(f"ID: {me.id}")
-    print(f"Username: @{me.username}")
-    print("=" * 50)
+                await client.sign_in(
+                    password=password,
+                )
 
-    await client.disconnect()
+        me = await client.get_me()
+
+        print()
+        print("=" * 50)
+        print(f"Успішний вхід як: {me.first_name}")
+        print(f"ID: {me.id}")
+        print(f"Username: @{me.username}")
+        print("=" * 50)
+
+    finally:
+        await client.disconnect()

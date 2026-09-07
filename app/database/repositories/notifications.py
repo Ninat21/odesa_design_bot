@@ -51,7 +51,7 @@ class NotificationRepository(BaseRepository[Notification]):
 
         self.db.add(notification)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(notification)
 
         return notification
@@ -59,11 +59,11 @@ class NotificationRepository(BaseRepository[Notification]):
     async def save(self, notification: Notification) -> Notification:
         self.db.add(notification)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(notification)
 
         return notification
 
     async def delete(self, notification: Notification) -> None:
         await self.db.delete(notification)
-        await self.db.commit()
+        await self.db.flush()

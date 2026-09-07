@@ -38,7 +38,7 @@ class ImportRepository(BaseRepository[Import]):
 
         self.db.add(import_record)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(import_record)
 
         return import_record
@@ -49,7 +49,7 @@ class ImportRepository(BaseRepository[Import]):
     ) -> Import:
         self.db.add(import_record)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(import_record)
 
         return import_record
@@ -59,4 +59,4 @@ class ImportRepository(BaseRepository[Import]):
         import_record: Import,
     ) -> None:
         await self.db.delete(import_record)
-        await self.db.commit()
+        await self.db.flush()

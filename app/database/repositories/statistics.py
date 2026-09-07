@@ -7,6 +7,15 @@ from app.database.repositories.base import BaseRepository
 
 
 class StatisticsRepository(BaseRepository):
+    async def get_totals(self) -> tuple[int, int]:
+        users = await self.db.scalar(
+            select(func.count(User.id)).where(
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
+            )
+        )
+        messages = await self.db.scalar(select(func.count(Message.id)))
+        return users or 0, messages or 0
 
     async def get_top_users(
         self,
@@ -14,19 +23,18 @@ class StatisticsRepository(BaseRepository):
         days: int | None = None,
     ):
 
-        stmt = (
-            select(
-                User,
-                func.count(Message.id).label("messages"),
-            )
-            .join(
-                Message,
-                Message.user_id == User.id,
-            )
+        stmt = select(
+            User,
+            func.count(Message.id).label("messages"),
+        ).join(
+            Message,
+            Message.user_id == User.id,
+        ).where(
+            User.is_member.is_(True),
+            User.is_bot.is_(False),
         )
 
         if days is not None:
-
             date_from = datetime.now(UTC) - timedelta(days=days)
 
             stmt = stmt.where(
@@ -47,12 +55,15 @@ class StatisticsRepository(BaseRepository):
         return result.all()
 
     async def get_users_without_messages(self):
-
         stmt = (
             select(User)
             .outerjoin(
                 Message,
                 Message.user_id == User.id,
+            )
+            .where(
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
             )
             .group_by(User.id)
             .having(func.count(Message.id) == 0)
@@ -74,6 +85,10 @@ class StatisticsRepository(BaseRepository):
                 Message,
                 Message.user_id == User.id,
             )
+            .where(
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
+            )
             .group_by(User.id)
             .having(func.count(Message.id) == 1)
             .order_by(User.first_name)
@@ -89,13 +104,12 @@ class StatisticsRepository(BaseRepository):
     ):
 
         border = datetime.now(UTC) - timedelta(days=days)
+        membership_date = func.coalesce(User.joined_at, User.created_at)
 
         subquery = (
             select(
                 Message.user_id,
-                func.max(Message.telegram_date).label(
-                    "last_message"
-                ),
+                func.max(Message.telegram_date).label("last_message"),
                 func.count(Message.id).label(
                     "messages",
                 ),
@@ -118,7 +132,9 @@ class StatisticsRepository(BaseRepository):
                 and_(
                     subquery.c.messages > 0,
                     subquery.c.last_message < border,
-                    User.created_at < border,
+                    membership_date < border,
+                    User.is_member.is_(True),
+                    User.is_bot.is_(False),
                 )
             )
             .order_by(
@@ -135,9 +151,14 @@ class StatisticsRepository(BaseRepository):
         limit: int,
     ):
 
+        membership_date = func.coalesce(User.joined_at, User.created_at)
         stmt = (
             select(User)
-            .order_by(User.created_at)
+            .where(
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
+            )
+            .order_by(membership_date)
             .limit(limit)
         )
 
@@ -152,13 +173,16 @@ class StatisticsRepository(BaseRepository):
 
         border = datetime.now(UTC) - timedelta(days=days)
 
+        membership_date = func.coalesce(User.joined_at, User.created_at)
         stmt = (
             select(User)
             .where(
-                User.created_at >= border,
+                membership_date >= border,
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
             )
             .order_by(
-                User.created_at.desc(),
+                membership_date.desc(),
             )
         )
 

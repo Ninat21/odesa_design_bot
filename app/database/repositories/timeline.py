@@ -51,7 +51,7 @@ class TimelineRepository(BaseRepository[Timeline]):
 
         self.db.add(timeline)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(timeline)
 
         return timeline
@@ -62,7 +62,7 @@ class TimelineRepository(BaseRepository[Timeline]):
     ) -> Timeline:
         self.db.add(timeline)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(timeline)
 
         return timeline
@@ -72,4 +72,4 @@ class TimelineRepository(BaseRepository[Timeline]):
         timeline: Timeline,
     ) -> None:
         await self.db.delete(timeline)
-        await self.db.commit()
+        await self.db.flush()

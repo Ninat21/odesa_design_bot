@@ -36,7 +36,7 @@ class AIProfileRepository(BaseRepository[AIProfile]):
 
         self.db.add(profile)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(profile)
 
         return profile
@@ -47,7 +47,7 @@ class AIProfileRepository(BaseRepository[AIProfile]):
     ) -> AIProfile:
         self.db.add(profile)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(profile)
 
         return profile
@@ -57,4 +57,4 @@ class AIProfileRepository(BaseRepository[AIProfile]):
         profile: AIProfile,
     ) -> None:
         await self.db.delete(profile)
-        await self.db.commit()
+        await self.db.flush()

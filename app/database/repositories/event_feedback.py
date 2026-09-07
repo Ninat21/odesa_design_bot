@@ -48,7 +48,7 @@ class EventFeedbackRepository(BaseRepository[EventFeedback]):
 
         self.db.add(feedback)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(feedback)
 
         return feedback
@@ -56,11 +56,11 @@ class EventFeedbackRepository(BaseRepository[EventFeedback]):
     async def save(self, feedback: EventFeedback) -> EventFeedback:
         self.db.add(feedback)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(feedback)
 
         return feedback
 
     async def delete(self, feedback: EventFeedback) -> None:
         await self.db.delete(feedback)
-        await self.db.commit()
+        await self.db.flush()

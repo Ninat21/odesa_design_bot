@@ -42,7 +42,7 @@ class SavedMessageRepository(BaseRepository[SavedMessage]):
 
         self.db.add(saved_message)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(saved_message)
 
         return saved_message
@@ -50,11 +50,11 @@ class SavedMessageRepository(BaseRepository[SavedMessage]):
     async def save(self, saved_message: SavedMessage) -> SavedMessage:
         self.db.add(saved_message)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(saved_message)
 
         return saved_message
 
     async def delete(self, saved_message: SavedMessage) -> None:
         await self.db.delete(saved_message)
-        await self.db.commit()
+        await self.db.flush()

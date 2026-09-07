@@ -4,12 +4,10 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
-    ForeignKey,
     Index,
     Integer,
     String,
 )
-
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base

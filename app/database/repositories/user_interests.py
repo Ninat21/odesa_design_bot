@@ -51,7 +51,7 @@ class UserInterestRepository(BaseRepository[UserInterest]):
 
         self.db.add(user_interest)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_interest)
 
         return user_interest
@@ -62,7 +62,7 @@ class UserInterestRepository(BaseRepository[UserInterest]):
     ) -> UserInterest:
         self.db.add(user_interest)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_interest)
 
         return user_interest
@@ -72,4 +72,4 @@ class UserInterestRepository(BaseRepository[UserInterest]):
         user_interest: UserInterest,
     ) -> None:
         await self.db.delete(user_interest)
-        await self.db.commit()
+        await self.db.flush()

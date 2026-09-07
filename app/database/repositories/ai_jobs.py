@@ -50,7 +50,7 @@ class AIJobRepository(BaseRepository[AIJob]):
 
         self.db.add(job)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(job)
 
         return job
@@ -61,7 +61,7 @@ class AIJobRepository(BaseRepository[AIJob]):
     ) -> AIJob:
         self.db.add(job)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(job)
 
         return job
@@ -71,4 +71,4 @@ class AIJobRepository(BaseRepository[AIJob]):
         job: AIJob,
     ) -> None:
         await self.db.delete(job)
-        await self.db.commit()
+        await self.db.flush()

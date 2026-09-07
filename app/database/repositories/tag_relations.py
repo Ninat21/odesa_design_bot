@@ -55,7 +55,7 @@ class TagRelationRepository(BaseRepository[TagRelation]):
 
         self.db.add(relation)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(relation)
 
         return relation
@@ -66,7 +66,7 @@ class TagRelationRepository(BaseRepository[TagRelation]):
     ) -> TagRelation:
         self.db.add(relation)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(relation)
 
         return relation
@@ -76,4 +76,4 @@ class TagRelationRepository(BaseRepository[TagRelation]):
         relation: TagRelation,
     ) -> None:
         await self.db.delete(relation)
-        await self.db.commit()
+        await self.db.flush()

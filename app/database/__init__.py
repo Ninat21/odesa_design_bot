@@ -1,6 +1,1 @@
-from app.database.database import Base, engine
-
-
-def create_database():
-
-    Base.metadata.create_all(engine)
+"""Database package. Schema changes are managed exclusively through Alembic."""

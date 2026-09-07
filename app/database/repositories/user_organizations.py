@@ -51,7 +51,7 @@ class UserOrganizationRepository(BaseRepository[UserOrganization]):
 
         self.db.add(user_organization)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_organization)
 
         return user_organization
@@ -62,7 +62,7 @@ class UserOrganizationRepository(BaseRepository[UserOrganization]):
     ) -> UserOrganization:
         self.db.add(user_organization)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(user_organization)
 
         return user_organization
@@ -72,4 +72,4 @@ class UserOrganizationRepository(BaseRepository[UserOrganization]):
         user_organization: UserOrganization,
     ) -> None:
         await self.db.delete(user_organization)
-        await self.db.commit()
+        await self.db.flush()

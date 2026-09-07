@@ -1,61 +1,52 @@
 import asyncio
 
+from app.config import Config
 from app.database.database import SessionLocal
 from app.database.uow import UnitOfWork
 from app.services.factory import ServiceFactory
 from app.telethon.client import client
 
+COMMIT_INTERVAL = 100
 
-CHAT_ID = -1002511970112
 
-
-async def main():
-
+async def main() -> None:
     await client.start()
 
-    entity = await client.get_entity(CHAT_ID)
+    try:
+        entity = await client.get_entity(Config.GROUP_ID)
+        print(f"Імпорт історії: {entity.title}")
 
-    print(f"Імпорт історії: {entity.title}")
-    print()
+        async with SessionLocal() as session:
+            services = ServiceFactory(UnitOfWork(session))
+            processed = 0
+            failed = 0
 
-    async with SessionLocal() as session:
+            async for message in client.iter_messages(entity, reverse=True):
+                try:
+                    async with session.begin_nested():
+                        result = await services.message_processor.process_telethon(
+                            message,
+                            chat_title=entity.title,
+                        )
 
-        uow = UnitOfWork(session)
-        services = ServiceFactory(uow)
+                    if result is not None:
+                        processed += 1
 
-        imported = 0
+                    if processed and processed % COMMIT_INTERVAL == 0:
+                        await session.commit()
+                        print(f"Оброблено {processed}")
+                except Exception as error:
+                    failed += 1
+                    print(
+                        f"Помилка в повідомленні {message.id}: "
+                        f"{type(error).__name__}: {error}"
+                    )
 
-        async for message in client.iter_messages(
-            entity,
-            reverse=True,
-        ):
+            await session.commit()
 
-            try:
-
-                await services.message_processor.process_telethon(
-                    message,
-                    chat_title=entity.title,
-                )
-
-                imported += 1
-
-                if imported % 100 == 0:
-                    print(f"Імпортовано {imported}")
-
-            except Exception as e:
-
-                print(f"\nПомилка в повідомленні {message.id}")
-                print(type(e).__name__)
-                print(e)
-
-        await session.commit()
-
-    await client.disconnect()
-
-    print()
-    print("=" * 60)
-    print(f"Готово. Імпортовано {imported} повідомлень.")
-    print("=" * 60)
+        print(f"Готово. Оброблено: {processed}; помилок: {failed}.")
+    finally:
+        await client.disconnect()
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ class KnowledgeSourceRepository(BaseRepository[KnowledgeSource]):
 
         self.db.add(source)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(source)
 
         return source
@@ -49,7 +49,7 @@ class KnowledgeSourceRepository(BaseRepository[KnowledgeSource]):
     ) -> KnowledgeSource:
         self.db.add(source)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(source)
 
         return source
@@ -59,4 +59,4 @@ class KnowledgeSourceRepository(BaseRepository[KnowledgeSource]):
         source: KnowledgeSource,
     ) -> None:
         await self.db.delete(source)
-        await self.db.commit()
+        await self.db.flush()

@@ -33,7 +33,7 @@ class OrganizationRepository(BaseRepository[Organization]):
 
         self.db.add(organization)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(organization)
 
         return organization
@@ -41,11 +41,11 @@ class OrganizationRepository(BaseRepository[Organization]):
     async def save(self, organization: Organization) -> Organization:
         self.db.add(organization)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(organization)
 
         return organization
 
     async def delete(self, organization: Organization) -> None:
         await self.db.delete(organization)
-        await self.db.commit()
+        await self.db.flush()

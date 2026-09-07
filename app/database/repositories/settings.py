@@ -45,7 +45,7 @@ class SettingRepository(BaseRepository[Setting]):
 
         self.db.add(setting)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(setting)
 
         return setting
@@ -56,7 +56,7 @@ class SettingRepository(BaseRepository[Setting]):
     ) -> Setting:
         self.db.add(setting)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(setting)
 
         return setting
@@ -66,4 +66,4 @@ class SettingRepository(BaseRepository[Setting]):
         setting: Setting,
     ) -> None:
         await self.db.delete(setting)
-        await self.db.commit()
+        await self.db.flush()

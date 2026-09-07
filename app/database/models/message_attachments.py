@@ -5,6 +5,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,6 +17,11 @@ class MessageAttachment(Base, TimestampMixin):
     __tablename__ = "message_attachments"
 
     __table_args__ = (
+        UniqueConstraint(
+            "message_id",
+            "telegram_unique_file_id",
+            name="uq_message_attachments_message_file",
+        ),
         Index("ix_message_attachments_message_id", "message_id"),
         Index("ix_message_attachments_attachment_type", "attachment_type"),
         Index(

@@ -45,7 +45,7 @@ class SkillRepository(BaseRepository[Skill]):
 
         self.db.add(skill)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(skill)
 
         return skill
@@ -56,7 +56,7 @@ class SkillRepository(BaseRepository[Skill]):
     ) -> Skill:
         self.db.add(skill)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(skill)
 
         return skill
@@ -66,4 +66,4 @@ class SkillRepository(BaseRepository[Skill]):
         skill: Skill,
     ) -> None:
         await self.db.delete(skill)
-        await self.db.commit()
+        await self.db.flush()

@@ -45,7 +45,7 @@ class TagRepository(BaseRepository[Tag]):
 
         self.db.add(tag)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(tag)
 
         return tag
@@ -56,7 +56,7 @@ class TagRepository(BaseRepository[Tag]):
     ) -> Tag:
         self.db.add(tag)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(tag)
 
         return tag
@@ -66,4 +66,4 @@ class TagRepository(BaseRepository[Tag]):
         tag: Tag,
     ) -> None:
         await self.db.delete(tag)
-        await self.db.commit()
+        await self.db.flush()

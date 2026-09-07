@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import and_, desc, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import Message
@@ -110,6 +111,28 @@ class MessageRepository(BaseRepository[Message]):
         await self.db.refresh(message)
 
         return message
+
+    async def create_if_missing(self, **data) -> tuple[Message, bool]:
+        stmt = (
+            insert(Message)
+            .values(**data)
+            .on_conflict_do_nothing(constraint="uq_messages_chat_message")
+            .returning(Message)
+        )
+        result = await self.db.execute(stmt)
+        message = result.scalar_one_or_none()
+
+        if message is not None:
+            return message, True
+
+        existing = await self.get_by_telegram_message_id(
+            chat_id=data["chat_id"],
+            telegram_message_id=data["telegram_message_id"],
+        )
+        if existing is None:
+            raise RuntimeError("Message upsert returned no row")
+
+        return existing, False
 
     async def save(
         self,

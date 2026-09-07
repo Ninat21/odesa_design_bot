@@ -1,14 +1,36 @@
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from telethon.tl.custom.message import Message
+
 from app.services.message_processor.dto.telegram_message import (
     TelegramMessageDTO,
 )
 
-from telethon.tl.custom.message import Message
+
+def get_content_type(message: Any) -> str:
+    checks = (
+        ("photo", "photo"),
+        ("sticker", "sticker"),
+        ("video_note", "video_note"),
+        ("voice", "voice"),
+        ("audio", "audio"),
+        ("gif", "animation"),
+        ("video", "video"),
+        ("document", "document"),
+    )
+    for attribute, content_type in checks:
+        if getattr(message, attribute, None):
+            return content_type
+
+    return "text"
 
 
 def from_telethon(
-    message: Message,
+    message: "Message",
     chat_title: str | None = None,
 ) -> TelegramMessageDTO:
+    content_type = get_content_type(message)
 
     sender = None
 
@@ -30,10 +52,10 @@ def from_telethon(
 
         user_id=sender,
 
-        text=message.text,
-        caption=None,
+        text=message.text if content_type == "text" else None,
+        caption=message.text if content_type != "text" else None,
 
-        content_type="text",
+        content_type=content_type,
 
         date=message.date,
         edit_date=message.edit_date,

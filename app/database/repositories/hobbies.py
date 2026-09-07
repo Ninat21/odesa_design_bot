@@ -45,7 +45,7 @@ class HobbyRepository(BaseRepository[Hobby]):
 
         self.db.add(hobby)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(hobby)
 
         return hobby
@@ -56,7 +56,7 @@ class HobbyRepository(BaseRepository[Hobby]):
     ) -> Hobby:
         self.db.add(hobby)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(hobby)
 
         return hobby
@@ -66,4 +66,4 @@ class HobbyRepository(BaseRepository[Hobby]):
         hobby: Hobby,
     ) -> None:
         await self.db.delete(hobby)
-        await self.db.commit()
+        await self.db.flush()

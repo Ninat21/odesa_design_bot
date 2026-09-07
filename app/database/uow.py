@@ -35,13 +35,14 @@ from app.database.repositories.saved_messages import (
 )
 from app.database.repositories.settings import SettingRepository
 from app.database.repositories.skills import SkillRepository
-from app.database.repositories.tags import TagRepository
+from app.database.repositories.statistics import StatisticsRepository
 from app.database.repositories.tag_relations import (
     TagRelationRepository,
 )
+from app.database.repositories.tags import TagRepository
 from app.database.repositories.timeline import TimelineRepository
 from app.database.repositories.users import UserRepository
-from app.database.repositories.statistics import StatisticsRepository
+
 
 class UnitOfWork:
     def __init__(
@@ -85,5 +86,5 @@ class UnitOfWork:
         self.settings = SettingRepository(session)
 
         self.statistics = StatisticsRepository(session)
-        
+
         self.imports = ImportRepository(session)

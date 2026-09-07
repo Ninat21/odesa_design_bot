@@ -18,6 +18,9 @@ class AttachmentService:
         telegram_message: Message,
         db_message: DBMessage,
     ) -> None:
+        file = self._get_file(telegram_message)
+        if file is None:
+            return
 
         if telegram_message.photo:
             await self._save_photo(
@@ -67,6 +70,31 @@ class AttachmentService:
                 db_message,
             )
 
+    @staticmethod
+    def _get_file(telegram_message: Message):
+        if telegram_message.photo:
+            return max(
+                telegram_message.photo,
+                key=lambda photo: photo.file_size or 0,
+            )
+
+        return next(
+            (
+                file
+                for file in (
+                    telegram_message.document,
+                    telegram_message.video,
+                    telegram_message.audio,
+                    telegram_message.voice,
+                    telegram_message.animation,
+                    telegram_message.video_note,
+                    telegram_message.sticker,
+                )
+                if file is not None
+            ),
+            None,
+        )
+
     async def _save_photo(
         self,
         telegram_message: Message,
@@ -78,7 +106,7 @@ class AttachmentService:
             key=lambda p: p.file_size or 0,
         )
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="photo",
             telegram_file_id=photo.file_id,
@@ -96,7 +124,7 @@ class AttachmentService:
 
         document = telegram_message.document
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="document",
             telegram_file_id=document.file_id,
@@ -105,9 +133,7 @@ class AttachmentService:
             mime_type=document.mime_type,
             file_size=document.file_size,
             thumbnail_file_id=(
-                document.thumbnail.file_id
-                if document.thumbnail
-                else None
+                document.thumbnail.file_id if document.thumbnail else None
             ),
         )
 
@@ -119,7 +145,7 @@ class AttachmentService:
 
         video = telegram_message.video
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="video",
             telegram_file_id=video.file_id,
@@ -130,11 +156,7 @@ class AttachmentService:
             width=video.width,
             height=video.height,
             duration=video.duration,
-            thumbnail_file_id=(
-                video.thumbnail.file_id
-                if video.thumbnail
-                else None
-            ),
+            thumbnail_file_id=(video.thumbnail.file_id if video.thumbnail else None),
         )
 
     async def _save_audio(
@@ -145,7 +167,7 @@ class AttachmentService:
 
         audio = telegram_message.audio
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="audio",
             telegram_file_id=audio.file_id,
@@ -154,11 +176,7 @@ class AttachmentService:
             mime_type=audio.mime_type,
             file_size=audio.file_size,
             duration=audio.duration,
-            thumbnail_file_id=(
-                audio.thumbnail.file_id
-                if audio.thumbnail
-                else None
-            ),
+            thumbnail_file_id=(audio.thumbnail.file_id if audio.thumbnail else None),
         )
 
     async def _save_voice(
@@ -169,7 +187,7 @@ class AttachmentService:
 
         voice = telegram_message.voice
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="voice",
             telegram_file_id=voice.file_id,
@@ -187,7 +205,7 @@ class AttachmentService:
 
         animation = telegram_message.animation
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="animation",
             telegram_file_id=animation.file_id,
@@ -199,9 +217,7 @@ class AttachmentService:
             height=animation.height,
             duration=animation.duration,
             thumbnail_file_id=(
-                animation.thumbnail.file_id
-                if animation.thumbnail
-                else None
+                animation.thumbnail.file_id if animation.thumbnail else None
             ),
         )
 
@@ -213,7 +229,7 @@ class AttachmentService:
 
         note = telegram_message.video_note
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="video_note",
             telegram_file_id=note.file_id,
@@ -222,11 +238,7 @@ class AttachmentService:
             width=note.length,
             height=note.length,
             duration=note.duration,
-            thumbnail_file_id=(
-                note.thumbnail.file_id
-                if note.thumbnail
-                else None
-            ),
+            thumbnail_file_id=(note.thumbnail.file_id if note.thumbnail else None),
         )
 
     async def _save_sticker(
@@ -237,7 +249,7 @@ class AttachmentService:
 
         sticker = telegram_message.sticker
 
-        await self.attachments.create(
+        await self.attachments.create_if_missing(
             message_id=db_message.id,
             attachment_type="sticker",
             telegram_file_id=sticker.file_id,
@@ -246,8 +258,6 @@ class AttachmentService:
             width=sticker.width,
             height=sticker.height,
             thumbnail_file_id=(
-                sticker.thumbnail.file_id
-                if sticker.thumbnail
-                else None
+                sticker.thumbnail.file_id if sticker.thumbnail else None
             ),
         )

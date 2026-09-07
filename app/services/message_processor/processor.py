@@ -1,19 +1,21 @@
+from typing import TYPE_CHECKING
+
 from aiogram.types import Message as TelegramMessage
 from aiogram.types import User as TelegramUser
+
+if TYPE_CHECKING:
+    from telethon.tl.custom.message import Message as TelethonMessage
 
 from app.database.models import Message
 from app.services.attachment_service import AttachmentService
 from app.services.message_processor.dto.from_aiogram import from_aiogram
+from app.services.message_processor.dto.from_telethon import (
+    from_telethon,
+)
 
 from .steps.save_message import SaveMessageStep
 from .steps.save_reply import SaveReplyStep
 from .steps.save_user import SaveUserStep
-
-from telethon.tl.custom.message import Message as TelethonMessage
-
-from app.services.message_processor.dto.from_telethon import (
-    from_telethon,
-)
 
 
 class MessageProcessor:
@@ -28,10 +30,10 @@ class MessageProcessor:
         self.save_reply = save_reply
         self.save_message = save_message
         self.attachment_service = attachment_service
-        
+
     async def process_telethon(
         self,
-        telegram_message: TelethonMessage,
+        telegram_message: "TelethonMessage",
         chat_title: str | None = None,
     ) -> Message | None:
 
@@ -50,6 +52,11 @@ class MessageProcessor:
         )
 
         reply_to_message_id = None
+        if dto.reply_to_message_id is not None:
+            reply_to_message_id = await self.save_reply.resolve(
+                chat_id=dto.chat_id,
+                telegram_message_id=dto.reply_to_message_id,
+            )
 
         message = await self.save_message.execute(
             message=dto,
@@ -69,8 +76,9 @@ class MessageProcessor:
             telegram_message,
         )
 
-        user = await self.save_user.execute(
+        user = await self.save_user.execute_member(
             telegram_user,
+            telegram_message.date,
         )
 
         reply_to_message_id = await self.save_reply.execute(

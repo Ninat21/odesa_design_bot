@@ -1,11 +1,6 @@
 import asyncio
 
+from app.config import Config
 from app.telethon.import_members import import_members
 
-
-CHAT_ID = -1002511970112
-
-
-asyncio.run(
-    import_members(CHAT_ID)
-)
+asyncio.run(import_members(Config.GROUP_ID))

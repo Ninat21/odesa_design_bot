@@ -19,7 +19,7 @@ class ProfileRepository(BaseRepository[Profile]):
 
         self.db.add(profile)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(profile)
 
         return profile
@@ -27,11 +27,11 @@ class ProfileRepository(BaseRepository[Profile]):
     async def save(self, profile: Profile) -> Profile:
         self.db.add(profile)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(profile)
 
         return profile
 
     async def delete(self, profile: Profile) -> None:
         await self.db.delete(profile)
-        await self.db.commit()
+        await self.db.flush()

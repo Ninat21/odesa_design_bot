@@ -7,4 +7,7 @@ from app.config import Config
 class AdminFilter(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
-        return message.from_user.id in Config.ADMIN_IDS
+        return (
+            message.from_user is not None
+            and message.from_user.id in Config.ADMIN_IDS
+        )

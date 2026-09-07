@@ -1,8 +1,8 @@
+from aiogram.types import Message
+
 from app.services.message_processor.dto.telegram_message import (
     TelegramMessageDTO,
 )
-
-from aiogram.types import Message
 
 
 def from_aiogram(

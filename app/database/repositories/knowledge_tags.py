@@ -38,7 +38,7 @@ class KnowledgeTagRepository(BaseRepository[KnowledgeTag]):
 
         self.db.add(tag)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(tag)
 
         return tag
@@ -49,7 +49,7 @@ class KnowledgeTagRepository(BaseRepository[KnowledgeTag]):
     ) -> KnowledgeTag:
         self.db.add(tag)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(tag)
 
         return tag
@@ -59,4 +59,4 @@ class KnowledgeTagRepository(BaseRepository[KnowledgeTag]):
         tag: KnowledgeTag,
     ) -> None:
         await self.db.delete(tag)
-        await self.db.commit()
+        await self.db.flush()

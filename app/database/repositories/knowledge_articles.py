@@ -44,7 +44,7 @@ class KnowledgeArticleRepository(BaseRepository[KnowledgeArticle]):
 
         self.db.add(article)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(article)
 
         return article
@@ -55,7 +55,7 @@ class KnowledgeArticleRepository(BaseRepository[KnowledgeArticle]):
     ) -> KnowledgeArticle:
         self.db.add(article)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(article)
 
         return article
@@ -65,4 +65,4 @@ class KnowledgeArticleRepository(BaseRepository[KnowledgeArticle]):
         article: KnowledgeArticle,
     ) -> None:
         await self.db.delete(article)
-        await self.db.commit()
+        await self.db.flush()

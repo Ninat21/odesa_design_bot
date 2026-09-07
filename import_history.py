@@ -1,12 +1,22 @@
-from app.database import create_database
+import argparse
+import asyncio
+
 from app.services.importer import import_telegram_json
 
 
-def main():
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Import a Telegram JSON export.")
+    parser.add_argument(
+        "path",
+        nargs="?",
+        default="result.json",
+        help="Path to the Telegram result.json export.",
+    )
+    return parser.parse_args()
 
-    create_database()
 
-    result = import_telegram_json("result.json")
+async def main():
+    result = await import_telegram_json(parse_args().path)
 
     print()
     print("========== ГОТОВО ==========")
@@ -16,4 +26,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

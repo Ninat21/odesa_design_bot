@@ -1,5 +1,10 @@
+from datetime import datetime
+from typing import TYPE_CHECKING
+
 from aiogram.types import User as AiogramUser
-from telethon.tl.types import User as TelethonUser
+
+if TYPE_CHECKING:
+    from telethon.tl.types import User as TelethonUser
 
 from app.database.models import User
 from app.database.repositories.users import UserRepository
@@ -31,9 +36,17 @@ class SaveUserStep:
             ),
         )
 
+    async def execute_member(
+        self,
+        telegram_user: AiogramUser,
+        observed_at: datetime,
+    ) -> User:
+        user = await self.execute(telegram_user)
+        return await self.users.mark_present(user, observed_at)
+
     async def execute_telethon(
         self,
-        telegram_user: TelethonUser,
+        telegram_user: "TelethonUser",
     ) -> User:
 
         return await self._save_user(
@@ -60,50 +73,12 @@ class SaveUserStep:
         language_code: str | None,
         is_premium: bool,
     ) -> User:
-
-        user = await self.users.get_by_telegram_id(
-            telegram_id,
+        return await self.users.upsert_by_telegram_id(
+            telegram_id=telegram_id,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            is_bot=is_bot,
+            language_code=language_code,
+            is_premium=is_premium,
         )
-
-        if user is None:
-
-            return await self.users.create(
-                telegram_id=telegram_id,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                is_bot=is_bot,
-                language_code=language_code,
-                is_premium=is_premium,
-            )
-
-        changed = False
-
-        if user.username != username:
-            user.username = username
-            changed = True
-
-        if user.first_name != first_name:
-            user.first_name = first_name
-            changed = True
-
-        if user.last_name != last_name:
-            user.last_name = last_name
-            changed = True
-
-        if user.language_code != language_code:
-            user.language_code = language_code
-            changed = True
-
-        if user.is_premium != is_premium:
-            user.is_premium = is_premium
-            changed = True
-
-        if user.is_bot != is_bot:
-            user.is_bot = is_bot
-            changed = True
-
-        if changed:
-            await self.users.save(user)
-
-        return user

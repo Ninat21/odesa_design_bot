@@ -61,7 +61,7 @@ class EventParticipantRepository(BaseRepository[EventParticipant]):
 
         self.db.add(participant)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(participant)
 
         return participant
@@ -69,11 +69,11 @@ class EventParticipantRepository(BaseRepository[EventParticipant]):
     async def save(self, participant: EventParticipant) -> EventParticipant:
         self.db.add(participant)
 
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(participant)
 
         return participant
 
     async def delete(self, participant: EventParticipant) -> None:
         await self.db.delete(participant)
-        await self.db.commit()
+        await self.db.flush()
