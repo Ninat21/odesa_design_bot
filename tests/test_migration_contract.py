@@ -1,6 +1,6 @@
 import importlib.util
 from pathlib import Path
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from sqlalchemy import Column, ForeignKeyConstraint, UniqueConstraint
 from sqlalchemy.dialects import postgresql
@@ -64,6 +64,19 @@ class MigrationRecorder:
     def add_column(self, table_name, column):
         self.tables[table_name][column.name] = column
 
+    def get_bind(self):
+        return self
+
+    def get_columns(self, table_name):
+        return [{"name": name} for name in self.tables[table_name]]
+
+    def get_unique_constraints(self, table_name):
+        return [
+            {"name": name, "column_names": list(columns)}
+            for constraint_table, name, columns in self.unique_constraints
+            if constraint_table == table_name
+        ]
+
     def execute(self, *_args, **_kwargs):
         return None
 
@@ -99,7 +112,8 @@ class MigrationContractTest(TestCase):
 
         try:
             initial_schema.upgrade()
-            message_sync.upgrade()
+            with mock.patch.object(message_sync.sa, "inspect", return_value=recorder):
+                message_sync.upgrade()
         finally:
             initial_schema.op = original_initial_op
             message_sync.op = original_sync_op
