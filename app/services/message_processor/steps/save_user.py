@@ -29,10 +29,12 @@ class SaveUserStep:
             last_name=telegram_user.last_name,
             is_bot=telegram_user.is_bot,
             language_code=telegram_user.language_code,
-            is_premium=getattr(
-                telegram_user,
-                "is_premium",
-                False,
+            is_premium=bool(
+                getattr(
+                    telegram_user,
+                    "is_premium",
+                    False,
+                )
             ),
         )
 
@@ -56,10 +58,12 @@ class SaveUserStep:
             last_name=telegram_user.last_name,
             is_bot=telegram_user.bot,
             language_code=None,
-            is_premium=getattr(
-                telegram_user,
-                "premium",
-                False,
+            is_premium=bool(
+                getattr(
+                    telegram_user,
+                    "premium",
+                    False,
+                )
             ),
         )
 

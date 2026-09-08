@@ -105,6 +105,24 @@ def analyze_membership_events(
             continue
 
         action = item.get("action")
+        if action == "create_group":
+            joined_at = parse_export_datetime(item)
+            creator_id = parse_user_id(item.get("actor_id"))
+            if creator_id is not None:
+                record(creator_id, joined_at)
+
+            for member_name in item.get("members") or []:
+                analysis.invite_references += 1
+                matches = aliases.get(member_name, set())
+                if len(matches) == 1:
+                    analysis.resolved_invites += 1
+                    record(next(iter(matches)), joined_at)
+                elif matches:
+                    analysis.ambiguous_invites += 1
+                else:
+                    analysis.unmatched_invites += 1
+            continue
+
         if action == "join_group_by_link":
             telegram_id = parse_user_id(item.get("actor_id"))
             if telegram_id is not None:

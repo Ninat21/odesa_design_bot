@@ -52,6 +52,9 @@ GitHub Actions автоматически создаёт одноразовую 
 # JSON-экспорт Telegram; без аргумента используется result.json
 .\.venv\Scripts\python.exe import_history.py C:\path\to\result.json
 
+# После JSON-импорта сверить статусы известных пользователей с Telegram
+.\.venv\Scripts\python.exe sync_known_members.py
+
 # История группы из GROUP_ID
 .\.venv\Scripts\python.exe telethon_import_history.py
 

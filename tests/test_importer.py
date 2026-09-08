@@ -110,3 +110,26 @@ class ImporterParserTest(TestCase):
 
         self.assertEqual(result.resolved_invites, 1)
         self.assertEqual(set(result.joined_at_by_user), {77})
+
+    def test_create_group_records_creator_and_initial_members(self):
+        messages = [
+            {
+                "type": "service",
+                "action": "create_group",
+                "actor": "Creator",
+                "actor_id": "user1",
+                "members": ["Creator", "Founding Member"],
+                "date": "2025-07-14T12:06:08",
+                "date_unixtime": "1752483968",
+            },
+            {
+                "type": "message",
+                "from": "Founding Member",
+                "from_id": "user2",
+            },
+        ]
+
+        result = analyze_membership_events(messages)
+
+        expected = datetime.fromtimestamp(1_752_483_968, UTC)
+        self.assertEqual(result.joined_at_by_user, {1: expected, 2: expected})
