@@ -132,6 +132,14 @@ class MessageRepository(BaseRepository[Message]):
         if existing is None:
             raise RuntimeError("Message upsert returned no row")
 
+        # Telegram delivers edited messages with the same chat/message key.
+        # Refresh the stored payload without incrementing user counters again.
+        for field, value in data.items():
+            setattr(existing, field, value)
+
+        await self.db.flush()
+        await self.db.refresh(existing)
+
         return existing, False
 
     async def save(

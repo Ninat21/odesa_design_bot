@@ -104,7 +104,14 @@ class DatabaseIntegrationTest(IsolatedAsyncioTestCase):
                     is_reply=False,
                     has_media=False,
                 )
-            second, second_created = await messages.create_if_missing(**values)
+            edited_at = datetime.now(UTC)
+            second, second_created = await messages.create_if_missing(
+                **{
+                    **values,
+                    "text": "Edited",
+                    "edited_at": edited_at,
+                }
+            )
             attachment_values = {
                 "message_id": first.id,
                 "attachment_type": "photo",
@@ -138,10 +145,15 @@ class DatabaseIntegrationTest(IsolatedAsyncioTestCase):
             user = await session.scalar(
                 select(User).where(User.telegram_id == self.telegram_id)
             )
+            message = await session.scalar(
+                select(Message).where(Message.chat_id == self.chat_id)
+            )
 
         self.assertEqual(message_count, 1)
         self.assertEqual(attachment_count, 1)
         self.assertEqual(user.messages_count, 1)
+        self.assertEqual(message.text, "Edited")
+        self.assertEqual(message.edited_at, edited_at)
 
     async def test_rollback_removes_uncommitted_changes(self) -> None:
         async with self.sessions() as session:
