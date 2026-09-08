@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
 
+from app.services.message_processor.dto.from_aiogram import from_aiogram
 from app.services.message_processor.dto.telegram_message import TelegramMessageDTO
 from app.services.message_processor.steps.save_message import SaveMessageStep
 
@@ -96,3 +97,42 @@ class SaveMessageStepTest(IsolatedAsyncioTestCase):
             is_reply=True,
             has_media=True,
         )
+
+
+class AiogramMessageConversionTest(IsolatedAsyncioTestCase):
+    async def test_nullable_telegram_booleans_are_normalized(self):
+        message = SimpleNamespace(
+            message_id=1,
+            chat=SimpleNamespace(
+                id=-1001,
+                type="supergroup",
+                title="Community",
+                username=None,
+            ),
+            from_user=SimpleNamespace(id=42),
+            text=None,
+            caption=None,
+            content_type="new_chat_members",
+            date=datetime(2026, 9, 8, tzinfo=UTC),
+            edit_date=None,
+            reply_to_message=None,
+            message_thread_id=None,
+            media_group_id=None,
+            sender_chat=None,
+            via_bot=None,
+            entities=None,
+            caption_entities=None,
+            forward_origin=None,
+            external_reply=None,
+            quote=None,
+            link_preview_options=None,
+            has_media_spoiler=None,
+            is_topic_message=None,
+            effect_id=None,
+            business_connection_id=None,
+        )
+
+        dto = from_aiogram(message)
+
+        self.assertFalse(dto.has_media_spoiler)
+        self.assertFalse(dto.is_topic_message)

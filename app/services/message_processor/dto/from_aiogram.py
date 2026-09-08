@@ -64,16 +64,12 @@ def from_aiogram(
 
         link_preview=message.link_preview_options,
 
-        has_media_spoiler=getattr(
-            message,
-            "has_media_spoiler",
-            False,
+        has_media_spoiler=bool(
+            getattr(message, "has_media_spoiler", False)
         ),
 
-        is_topic_message=getattr(
-            message,
-            "is_topic_message",
-            False,
+        is_topic_message=bool(
+            getattr(message, "is_topic_message", False)
         ),
 
         effect_id=getattr(
