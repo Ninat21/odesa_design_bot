@@ -77,7 +77,10 @@ async def left_members(
         if user.left_at is None:
             departure = "точна дата виходу невідома"
         else:
-            departure = f"вихід {user.left_at.strftime('%d.%m.%Y')}"
+            departure = (
+                "зафіксовано не в групі "
+                f"{user.left_at.strftime('%d.%m.%Y')}"
+            )
         text += f"{i}. {member_name_link(user)} ({departure})\n"
 
     await answer_html(message, text)
