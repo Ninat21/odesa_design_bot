@@ -3,10 +3,12 @@ import asyncio
 from aiogram import Dispatcher
 
 from app.bot import bot
+from app.bot_commands import setup_bot_commands
 from app.core.logger import logger
 
 # from app.handlers.welcome_new import router as welcome_new_router
 from app.handlers.admin.statistics import router as statistics_router
+from app.handlers.help import router as help_router
 from app.handlers.ping import router as ping_router
 from app.handlers.setup import router as setup_router
 from app.handlers.stats import router as stats_router
@@ -36,6 +38,7 @@ def create_dispatcher() -> Dispatcher:
     configure_middlewares(dp)
 
     dp.include_router(welcome_router)
+    dp.include_router(help_router)
     dp.include_router(setup_router)
     dp.include_router(ping_router)
     dp.include_router(stats_router)
@@ -52,6 +55,7 @@ async def main():
     try:
         logger.info("Бот запущений")
         await bot.delete_webhook(drop_pending_updates=False)
+        await setup_bot_commands(bot)
         await dp.start_polling(bot)
     finally:
         await health_runner.cleanup()
