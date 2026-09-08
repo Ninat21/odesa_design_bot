@@ -133,3 +133,42 @@ class ImporterParserTest(TestCase):
 
         expected = datetime.fromtimestamp(1_752_483_968, UTC)
         self.assertEqual(result.joined_at_by_user, {1: expected, 2: expected})
+
+    def test_self_leave_records_reliable_actor_id(self):
+        messages = [
+            {
+                "type": "service",
+                "action": "remove_members",
+                "actor": "Former Member",
+                "actor_id": "user42",
+                "members": ["Former Member"],
+                "date": "2026-09-01T12:00:00",
+                "date_unixtime": "1788264000",
+            }
+        ]
+
+        result = analyze_membership_events(messages)
+
+        self.assertEqual(result.leave_events, 1)
+        self.assertEqual(result.resolved_leaves, 1)
+        self.assertEqual(
+            result.left_at_by_user,
+            {42: datetime.fromtimestamp(1_788_264_000, UTC)},
+        )
+
+    def test_admin_removal_uses_unique_member_alias(self):
+        messages = [
+            {"type": "message", "from": "Removed User", "from_id": "user77"},
+            {
+                "type": "service",
+                "action": "remove_members",
+                "actor": "Admin",
+                "actor_id": "user1",
+                "members": ["Removed User"],
+                "date": "2026-09-01T12:00:00",
+            },
+        ]
+
+        result = analyze_membership_events(messages)
+
+        self.assertEqual(set(result.left_at_by_user), {77})

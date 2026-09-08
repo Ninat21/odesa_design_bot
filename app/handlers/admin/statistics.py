@@ -65,6 +65,24 @@ async def members(
     await answer_html(message, text)
 
 
+@router.message(Command("left"), AdminFilter())
+async def left_members(
+    message: Message,
+    services: ServiceFactory,
+):
+    users = await services.statistics.left_members()
+    text = f"🚪 Вийшли або більше не в групі ({len(users)}):\n\n"
+
+    for i, user in enumerate(users, start=1):
+        if user.left_at is None:
+            departure = "точна дата виходу невідома"
+        else:
+            departure = f"вихід {user.left_at.strftime('%d.%m.%Y')}"
+        text += f"{i}. {member_name_link(user)} ({departure})\n"
+
+    await answer_html(message, text)
+
+
 @router.message(Command("inactive3m"), AdminFilter())
 async def inactive3m(
     message: Message,

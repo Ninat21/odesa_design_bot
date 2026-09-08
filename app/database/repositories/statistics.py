@@ -23,15 +23,38 @@ class StatisticsRepository(BaseRepository):
         result = await self.db.execute(stmt)
         return list(result.scalars())
 
-    async def get_totals(self) -> tuple[int, int]:
-        users = await self.db.scalar(
+    async def get_left_members(self) -> list[User]:
+        stmt = (
+            select(User)
+            .where(
+                User.is_member.is_(False),
+                User.is_bot.is_(False),
+            )
+            .order_by(
+                User.left_at.desc().nullslast(),
+                func.lower(func.coalesce(User.first_name, User.username, "")),
+                User.telegram_id,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        return list(result.scalars())
+
+    async def get_totals(self) -> tuple[int, int, int]:
+        current_users = await self.db.scalar(
             select(func.count(User.id)).where(
                 User.is_member.is_(True),
                 User.is_bot.is_(False),
             )
         )
+        left_users = await self.db.scalar(
+            select(func.count(User.id)).where(
+                User.is_member.is_(False),
+                User.is_bot.is_(False),
+            )
+        )
         messages = await self.db.scalar(select(func.count(Message.id)))
-        return users or 0, messages or 0
+        return current_users or 0, left_users or 0, messages or 0
 
     async def get_top_users(
         self,

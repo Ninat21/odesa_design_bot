@@ -16,11 +16,14 @@ SUPERGROUP_ID_OFFSET = 1_000_000_000_000
 @dataclass
 class MembershipAnalysis:
     joined_at_by_user: dict[int, datetime] = field(default_factory=dict)
+    left_at_by_user: dict[int, datetime] = field(default_factory=dict)
     link_events: int = 0
     invite_references: int = 0
     resolved_invites: int = 0
     ambiguous_invites: int = 0
     unmatched_invites: int = 0
+    leave_events: int = 0
+    resolved_leaves: int = 0
 
 
 def parse_text(text) -> str:
@@ -105,6 +108,24 @@ def analyze_membership_events(
             continue
 
         action = item.get("action")
+        if action == "remove_members":
+            left_at = parse_export_datetime(item)
+            actor_id = parse_user_id(item.get("actor_id"))
+            actor_name = item.get("actor")
+
+            for member_name in item.get("members") or []:
+                analysis.leave_events += 1
+                matches = aliases.get(member_name, set())
+                if member_name == actor_name and actor_id is not None:
+                    matches = {actor_id}
+                if len(matches) == 1:
+                    telegram_id = next(iter(matches))
+                    previous = analysis.left_at_by_user.get(telegram_id)
+                    if previous is None or left_at > previous:
+                        analysis.left_at_by_user[telegram_id] = left_at
+                    analysis.resolved_leaves += 1
+            continue
+
         if action == "create_group":
             joined_at = parse_export_datetime(item)
             creator_id = parse_user_id(item.get("actor_id"))
@@ -165,6 +186,8 @@ def analyze_telegram_json(path: str | Path) -> dict[str, int]:
         "ambiguous_invites": membership.ambiguous_invites,
         "unmatched_invites": membership.unmatched_invites,
         "users_with_join_date": len(membership.joined_at_by_user),
+        "leave_events": membership.leave_events,
+        "resolved_leaves": membership.resolved_leaves,
     }
 
 
@@ -231,6 +254,27 @@ async def import_telegram_json(
         }
         source_messages.append({"item": item, "telegram_id": telegram_id})
 
+    # A self-leave event contains a reliable Telegram ID even if that person
+    # never wrote a regular message in the exported history.
+    for item in all_items:
+        if item.get("type") != "service" or item.get("action") != "remove_members":
+            continue
+        if item.get("actor") not in (item.get("members") or []):
+            continue
+        telegram_id = parse_user_id(item.get("actor_id"))
+        if telegram_id is None:
+            continue
+        users.setdefault(
+            telegram_id,
+            {
+                "telegram_id": telegram_id,
+                "username": None,
+                "first_name": item.get("actor"),
+                "last_name": None,
+                "is_member": False,
+            },
+        )
+
     if not users:
         return {"users": 0, "messages": 0}
 
@@ -265,7 +309,11 @@ async def import_telegram_json(
         )
         inserted_users = len((await session.execute(user_insert)).scalars().all())
 
-        known_telegram_ids = set(users) | set(membership.joined_at_by_user)
+        known_telegram_ids = (
+            set(users)
+            | set(membership.joined_at_by_user)
+            | set(membership.left_at_by_user)
+        )
         user_rows = await session.execute(
             select(User.telegram_id, User.id).where(
                 User.telegram_id.in_(known_telegram_ids)
@@ -293,6 +341,21 @@ async def import_telegram_json(
                 )
             )
             membership_updates += 1
+
+        departure_updates = 0
+        for telegram_id, left_at in membership.left_at_by_user.items():
+            user_id = user_ids.get(telegram_id)
+            if user_id is None:
+                continue
+            result = await session.execute(
+                update(User)
+                .where(
+                    User.id == user_id,
+                    User.is_member.is_(False),
+                )
+                .values(left_at=left_at)
+            )
+            departure_updates += result.rowcount
 
         inserted_messages = 0
         telegram_message_ids: list[int] = []
@@ -388,4 +451,5 @@ async def import_telegram_json(
         "users": inserted_users,
         "messages": inserted_messages,
         "membership_dates": membership_updates,
+        "departure_dates": departure_updates,
     }

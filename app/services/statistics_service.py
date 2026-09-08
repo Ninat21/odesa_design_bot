@@ -8,11 +8,14 @@ class StatisticsService:
     ):
         self.statistics = statistics
 
-    async def totals(self) -> tuple[int, int]:
+    async def totals(self) -> tuple[int, int, int]:
         return await self.statistics.get_totals()
 
     async def members(self):
         return await self.statistics.get_current_members()
+
+    async def left_members(self):
+        return await self.statistics.get_left_members()
 
     async def top10(self):
         return await self.statistics.get_top_users(

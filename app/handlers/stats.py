@@ -14,12 +14,14 @@ async def stats(
     message: Message,
     services: ServiceFactory,
 ) -> None:
-    users, messages = await services.statistics.totals()
+    current_users, left_users, messages = await services.statistics.totals()
 
     text = f"""
 📊 <b>Статистика спільноти</b>
 
-👥 Користувачів: <b>{users}</b>
+👥 Учасників зараз: <b>{current_users}</b>
+🚪 Вийшли або більше не в групі: <b>{left_users}</b>
+📋 Всього відомих людей: <b>{current_users + left_users}</b>
 💬 Повідомлень: <b>{messages}</b>
 """
 
