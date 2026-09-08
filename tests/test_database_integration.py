@@ -278,6 +278,7 @@ class DatabaseIntegrationTest(IsolatedAsyncioTestCase):
         self.assertEqual(second_result["messages"], 0)
         self.assertEqual(first_result["membership_dates"], 1)
         self.assertEqual(user.joined_at, datetime.fromtimestamp(joined_timestamp, UTC))
+        self.assertFalse(user.is_member)
         self.assertEqual(user.messages_count, 1)
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].text, "Edited")

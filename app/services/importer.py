@@ -207,6 +207,9 @@ async def import_telegram_json(
             "username": None,
             "first_name": item.get("from"),
             "last_name": None,
+            # A message in an export proves authorship, not current membership.
+            # The live participant sync is the authority for is_member.
+            "is_member": False,
         }
         source_messages.append({"item": item, "telegram_id": telegram_id})
 
