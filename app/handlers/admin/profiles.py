@@ -106,7 +106,8 @@ def render_profile_card(user, profile, facts) -> str:
 
 
 async def resolve_user(message, command: CommandObject, services: ServiceFactory):
-    argument = (command.args or "").strip().split(maxsplit=1)[0]
+    raw_argument = (command.args or "").strip()
+    argument = raw_argument.split(maxsplit=1)[0] if raw_argument else ""
     if argument:
         if argument.removeprefix("@").isdigit():
             return await services.users.get_by_telegram_id(

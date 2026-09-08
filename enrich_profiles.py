@@ -14,16 +14,17 @@ async def main() -> None:
 
     async with SessionLocal() as session:
         rows = await session.execute(
-            select(Message, User.username)
+            select(Message, User.username, User.first_name)
             .join(User, Message.user_id == User.id)
             .where(Message.text.is_not(None), Message.text != "")
             .order_by(Message.id)
         )
-        for message, username in rows:
+        for message, username, first_name in rows:
             facts = extract_profile_facts(
                 message.text,
                 message.telegram_date,
                 username,
+                first_name,
             )
             for fact in facts:
                 found += 1

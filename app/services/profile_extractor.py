@@ -16,13 +16,31 @@ AGE_RE = re.compile(
     r"\b(?:мені|мне)\s+(\d{1,2})\s*(?:рок(?:и|ів)?|лет|года?)\b",
     re.IGNORECASE,
 )
-ROLE_RE = re.compile(
-    r"\b((?:(?:графічн|графическ|продуктов|бренд|інтерфейс|"
-    r"интерфейс|веб|web|ux[\s/]*ui|ui[\s/]*ux|motion|3d)\w*\s+)?"
-    r"(?:дизайнер\w*|ілюстратор\w*|иллюстратор\w*|фотограф\w*|"
-    r"маркетолог\w*|архітектор\w*|архитектор\w*|художник\w*|"
-    r"художниц\w*|копірайтер\w*|копирайтер\w*|розробник\w*|"
-    r"разработчик\w*|програміст\w*|программист\w*))\b",
+ROLE_PATTERN = (
+    r"(?:(?:графічн\w*|графическ\w*|продуктов\w*|бренд[\s-]?|"
+    r"інтерфейс\w*|интерфейс\w*|веб[\s-]?|web[\s-]?|"
+    r"ux[\s/]*ui|ui[\s/]*ux|motion[\s-]?|3d[\s-]?)\s*)?"
+    r"(?:дизайнер(?:ка|кою|ом)?|ілюстратор(?:ка|ом)?|"
+    r"иллюстратор(?:ка|ом)?|фотограф(?:ка|ом)?|маркетолог(?:ом)?|"
+    r"архітектор(?:ка|ом)?|архитектор(?:ка|ом)?|художник(?:ом)?|"
+    r"художниця|копірайтер(?:ка|ом|кою)?|копирайтер(?:ом)?|"
+    r"розробник(?:ом)?|разработчик(?:ом)?|програміст(?:ом)?|"
+    r"программист(?:ом)?)"
+)
+ROLE_RE = re.compile(rf"\b({ROLE_PATTERN})\b", re.IGNORECASE)
+SELF_ROLE_RE = re.compile(
+    rf"\bя\b(?:\s+[\wʼ'’-]+){{0,4}}?\s+\b({ROLE_PATTERN})\b",
+    re.IGNORECASE,
+)
+WORK_ROLE_RE = re.compile(
+    rf"\b(?:працюю|работаю|працювала|работала|"
+    rf"за\s+фахом|за\s+освітою|по\s+профессии)\b"
+    rf"(?:\s+[\wʼ'’-]+){{0,6}}\s+\b({ROLE_PATTERN})\b",
+    re.IGNORECASE,
+)
+INTRO_RE = re.compile(
+    r"\b(?:всім\s+привіт|всем\s+привет|мене\s+звати|"
+    r"меня\s+зовут)\b",
     re.IGNORECASE,
 )
 PERSONAL_RE = re.compile(
@@ -41,16 +59,33 @@ PERSONAL_LINK_RE = re.compile(
     r"портфоліо|портфолио|portfolio|сайт)",
     re.IGNORECASE,
 )
+INTRO_NAME_RE = re.compile(
+    r"\b(?:мене\s+звати|меня\s+зовут)\s+([\wʼ'’-]+)",
+    re.IGNORECASE,
+)
+NEGATED_ROLE_RE = re.compile(
+    rf"\bне\b(?:\s+[\wʼ'’-]+){{0,2}}\s+\b{ROLE_PATTERN}\b",
+    re.IGNORECASE,
+)
+QUOTED_TEXT_RE = re.compile(r"[«“\"](?:.|\n)*?[»”\"]")
 
 
 def clean_url(url: str) -> str:
     return url.rstrip(".,;:!?)]}")
 
 
+def introduction_matches_author(text: str, first_name: str | None) -> bool:
+    introduced = INTRO_NAME_RE.search(text[:500])
+    if introduced is None or not first_name:
+        return True
+    return introduced.group(1)[0].casefold() == first_name[0].casefold()
+
+
 def extract_profile_facts(
     text: str,
     message_date: datetime,
     username: str | None = None,
+    first_name: str | None = None,
 ) -> list[ExtractedFact]:
     facts: list[ExtractedFact] = []
     personal = bool(PERSONAL_RE.search(text))
@@ -66,8 +101,20 @@ def extract_profile_facts(
         )
 
     if personal:
-        role = ROLE_RE.search(text)
-        if role:
+        identity_text = QUOTED_TEXT_RE.sub(" ", text)
+        author_intro = introduction_matches_author(text, first_name)
+        intro = INTRO_RE.search(identity_text[:120])
+        identity_context = intro is not None or len(text) <= 250
+        role = SELF_ROLE_RE.search(identity_text[:180]) if author_intro else None
+        if role is None and author_intro:
+            role = WORK_ROLE_RE.search(identity_text[:180])
+        if role is None and author_intro and intro:
+            role = ROLE_RE.search(identity_text[:180])
+        if (
+            role
+            and identity_context
+            and not NEGATED_ROLE_RE.search(identity_text[:250])
+        ):
             facts.append(ExtractedFact("profession", role.group(1).strip(), 0.90))
 
         hobby = HOBBY_RE.search(text)
