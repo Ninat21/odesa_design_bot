@@ -5,8 +5,10 @@ class ProfileService:
     def __init__(
         self,
         profiles: ProfileRepository,
+        profile_facts=None,
     ):
         self.profiles = profiles
+        self.profile_facts = profile_facts
 
     async def get_by_user_id(
         self,
@@ -31,3 +33,8 @@ class ProfileService:
         profile,
     ):
         await self.profiles.delete(profile)
+
+    async def get_card(self, user_id: int):
+        profile = await self.profiles.get_by_user_id(user_id)
+        facts = await self.profile_facts.list_with_sources(user_id)
+        return profile, facts

@@ -14,6 +14,7 @@ from .message_attachments import MessageAttachment
 from .messages import Message
 from .notifications import Notification
 from .organizations import Organization
+from .profile_facts import ProfileFact
 from .profiles import Profile
 from .saved_messages import SavedMessage
 from .settings import Setting
@@ -45,6 +46,7 @@ __all__ = [
     "Notification",
     "Organization",
     "Profile",
+    "ProfileFact",
     "SavedMessage",
     "Setting",
     "Skill",

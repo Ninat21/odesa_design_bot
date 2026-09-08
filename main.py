@@ -5,6 +5,7 @@ from aiogram import Dispatcher
 from app.bot import bot
 from app.bot_commands import setup_bot_commands
 from app.core.logger import logger
+from app.handlers.admin.profiles import router as profiles_router
 
 # from app.handlers.welcome_new import router as welcome_new_router
 from app.handlers.admin.statistics import router as statistics_router
@@ -42,6 +43,7 @@ def create_dispatcher() -> Dispatcher:
     dp.include_router(setup_router)
     dp.include_router(ping_router)
     dp.include_router(stats_router)
+    dp.include_router(profiles_router)
     dp.include_router(statistics_router)
     # dp.include_router(welcome_new_router)
 

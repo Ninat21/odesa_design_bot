@@ -29,6 +29,7 @@ from app.database.repositories.notifications import (
 from app.database.repositories.organizations import (
     OrganizationRepository,
 )
+from app.database.repositories.profile_facts import ProfileFactRepository
 from app.database.repositories.profiles import ProfileRepository
 from app.database.repositories.saved_messages import (
     SavedMessageRepository,
@@ -56,6 +57,7 @@ class UnitOfWork:
         self.attachments = MessageAttachmentRepository(session)
 
         self.profiles = ProfileRepository(session)
+        self.profile_facts = ProfileFactRepository(session)
 
         self.events = EventRepository(session)
         self.event_participants = EventParticipantRepository(session)

@@ -29,6 +29,7 @@ class ServiceFactory:
 
         self.profiles = ProfileService(
             uow.profiles,
+            uow.profile_facts,
         )
 
         self.membership = MembershipService(

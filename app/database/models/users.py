@@ -131,6 +131,11 @@ class User(Base, TimestampMixin):
         uselist=False,
     )
 
+    profile_facts = relationship(
+        "ProfileFact",
+        back_populates="user",
+    )
+
     organizations = relationship(
         "UserOrganization",
         back_populates="user",

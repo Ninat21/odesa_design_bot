@@ -25,6 +25,12 @@ class UserService:
             **data,
         )
 
+    async def get_by_telegram_id(self, telegram_id: int):
+        return await self.users.get_by_telegram_id(telegram_id)
+
+    async def get_by_username(self, username: str):
+        return await self.users.get_by_username(username)
+
     async def save(self, user):
         return await self.users.save(user)
 

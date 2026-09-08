@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import case, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,13 @@ class UserRepository(BaseRepository[User]):
 
     async def get_by_telegram_id(self, telegram_id: int) -> User | None:
         stmt = select(User).where(User.telegram_id == telegram_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_by_username(self, username: str) -> User | None:
+        stmt = select(User).where(
+            func.lower(User.username) == username.removeprefix("@").lower()
+        )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

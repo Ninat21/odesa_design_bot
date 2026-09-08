@@ -27,6 +27,10 @@ message_sync = load_revision(
     "message_sync",
     "a62f1bf37d4c_sync_message_model.py",
 )
+profile_facts = load_revision(
+    "profile_facts",
+    "c91d38a72f44_add_profile_facts.py",
+)
 
 
 class MigrationRecorder:
@@ -107,16 +111,20 @@ class MigrationContractTest(TestCase):
         recorder = MigrationRecorder()
         original_initial_op = initial_schema.op
         original_sync_op = message_sync.op
+        original_profile_facts_op = profile_facts.op
         initial_schema.op = recorder
         message_sync.op = recorder
+        profile_facts.op = recorder
 
         try:
             initial_schema.upgrade()
             with mock.patch.object(message_sync.sa, "inspect", return_value=recorder):
                 message_sync.upgrade()
+            profile_facts.upgrade()
         finally:
             initial_schema.op = original_initial_op
             message_sync.op = original_sync_op
+            profile_facts.op = original_profile_facts_op
 
         model_tables = dict(Base.metadata.tables)
         self.assertEqual(set(recorder.tables), set(model_tables))
