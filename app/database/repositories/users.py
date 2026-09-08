@@ -108,12 +108,17 @@ class UserRepository(BaseRepository[User]):
         return user
 
     async def mark_present(self, user: User, observed_at: datetime) -> User:
+        first_seen = case(
+            (User.first_seen_at.is_(None), observed_at),
+            else_=User.first_seen_at,
+        )
         await self.db.execute(
             update(User)
             .where(User.id == user.id)
             .values(
                 is_member=True,
                 left_at=None,
+                first_seen_at=first_seen,
                 last_seen_at=observed_at,
             )
         )
