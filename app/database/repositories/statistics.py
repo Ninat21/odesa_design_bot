@@ -1,12 +1,28 @@
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, or_, select
 
 from app.database.models import Message, User
 from app.database.repositories.base import BaseRepository
 
 
 class StatisticsRepository(BaseRepository):
+    async def get_current_members(self) -> list[User]:
+        stmt = (
+            select(User)
+            .where(
+                User.is_member.is_(True),
+            )
+            .order_by(
+                func.lower(func.coalesce(User.first_name, User.username, "")),
+                func.lower(func.coalesce(User.last_name, "")),
+                User.telegram_id,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        return list(result.scalars())
+
     async def get_totals(self) -> tuple[int, int]:
         users = await self.db.scalar(
             select(func.count(User.id)).where(
@@ -142,6 +158,44 @@ class StatisticsRepository(BaseRepository):
 
         result = await self.db.execute(stmt)
 
+        return result.all()
+
+    async def get_inactive_members(self, days: int):
+        border = datetime.now(UTC) - timedelta(days=days)
+        activity = (
+            select(
+                Message.user_id,
+                func.max(Message.telegram_date).label("last_message"),
+                func.count(Message.id).label("messages"),
+            )
+            .group_by(Message.user_id)
+            .subquery()
+        )
+
+        stmt = (
+            select(
+                User,
+                func.coalesce(activity.c.messages, 0).label("messages"),
+                activity.c.last_message,
+            )
+            .outerjoin(activity, User.id == activity.c.user_id)
+            .where(
+                User.is_member.is_(True),
+                User.is_bot.is_(False),
+                User.joined_at <= border,
+                or_(
+                    activity.c.last_message.is_(None),
+                    activity.c.last_message < border,
+                ),
+            )
+            .order_by(
+                activity.c.last_message.asc().nullsfirst(),
+                func.lower(func.coalesce(User.first_name, User.username, "")),
+                User.telegram_id,
+            )
+        )
+
+        result = await self.db.execute(stmt)
         return result.all()
 
     async def get_oldest_members(

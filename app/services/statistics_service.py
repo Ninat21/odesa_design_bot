@@ -11,6 +11,9 @@ class StatisticsService:
     async def totals(self) -> tuple[int, int]:
         return await self.statistics.get_totals()
 
+    async def members(self):
+        return await self.statistics.get_current_members()
+
     async def top10(self):
         return await self.statistics.get_top_users(
             limit=10,
@@ -46,6 +49,11 @@ class StatisticsService:
 
     async def inactive90(self):
         return await self.statistics.get_inactive_users(
+            days=90,
+        )
+
+    async def inactive3m(self):
+        return await self.statistics.get_inactive_members(
             days=90,
         )
 

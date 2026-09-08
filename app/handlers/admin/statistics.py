@@ -19,6 +19,21 @@ def user_link(user):
     return f'<a href="tg://user?id={user.telegram_id}">{name}</a>'
 
 
+def member_name_link(user):
+    name = " ".join(
+        part for part in (user.first_name, user.last_name) if part
+    )
+    if not name:
+        name = f"@{user.username}" if user.username else str(user.telegram_id)
+
+    if user.username:
+        href = f"https://t.me/{escape(user.username, quote=True)}"
+    else:
+        href = f"tg://user?id={user.telegram_id}"
+
+    return f'<a href="{href}">{escape(name)}</a>'
+
+
 def membership_date(user):
     return user.joined_at
 
@@ -34,6 +49,42 @@ async def answer_html(message: Message, text: str) -> None:
 
     if chunk:
         await message.answer(chunk, parse_mode="HTML")
+
+
+@router.message(Command("members"), AdminFilter())
+async def members(
+    message: Message,
+    services: ServiceFactory,
+):
+    users = await services.statistics.members()
+    text = f"👥 Усі учасники ({len(users)}):\n\n"
+
+    for i, user in enumerate(users, start=1):
+        text += f"{i}. {member_name_link(user)}\n"
+
+    await answer_html(message, text)
+
+
+@router.message(Command("inactive3m"), AdminFilter())
+async def inactive3m(
+    message: Message,
+    services: ServiceFactory,
+):
+    users = await services.statistics.inactive3m()
+    text = f"💤 Не писали останні три місяці ({len(users)}):\n\n"
+
+    for i, (user, messages, last_message) in enumerate(users, start=1):
+        if last_message is None:
+            activity = "повідомлень немає"
+        else:
+            activity = f"останнє {last_message.strftime('%d.%m.%Y')}"
+
+        text += (
+            f"{i}. {member_name_link(user)} "
+            f"({messages} повідомлень, {activity})\n"
+        )
+
+    await answer_html(message, text)
 
 
 @router.message(Command("top10"), AdminFilter())

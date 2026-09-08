@@ -2,7 +2,12 @@ from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import AsyncMock
 
-from app.handlers.admin.statistics import answer_html, membership_date, user_link
+from app.handlers.admin.statistics import (
+    answer_html,
+    member_name_link,
+    membership_date,
+    user_link,
+)
 
 
 class UserLinkTest(TestCase):
@@ -28,6 +33,30 @@ class UserLinkTest(TestCase):
         self.assertEqual(
             user_link(user),
             '<a href="tg://user?id=7">&lt;Name&gt;</a>',
+        )
+
+    def test_member_name_links_to_username(self):
+        user = SimpleNamespace(
+            username="member_name",
+            first_name="First",
+            last_name="Last",
+            telegram_id=7,
+        )
+        self.assertEqual(
+            member_name_link(user),
+            '<a href="https://t.me/member_name">First Last</a>',
+        )
+
+    def test_member_name_without_username_links_to_telegram_id(self):
+        user = SimpleNamespace(
+            username=None,
+            first_name="<First>",
+            last_name=None,
+            telegram_id=7,
+        )
+        self.assertEqual(
+            member_name_link(user),
+            '<a href="tg://user?id=7">&lt;First&gt;</a>',
         )
 
 
