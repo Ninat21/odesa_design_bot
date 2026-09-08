@@ -2,10 +2,15 @@ from types import SimpleNamespace
 from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import AsyncMock
 
-from app.handlers.admin.statistics import answer_html, user_link
+from app.handlers.admin.statistics import answer_html, membership_date, user_link
 
 
 class UserLinkTest(TestCase):
+    def test_membership_date_does_not_use_import_timestamp(self):
+        imported_at = object()
+        user = SimpleNamespace(joined_at=None, created_at=imported_at)
+        self.assertIsNone(membership_date(user))
+
     def test_username_is_escaped(self):
         user = SimpleNamespace(
             username="name<tag>",

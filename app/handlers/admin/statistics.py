@@ -20,7 +20,7 @@ def user_link(user):
 
 
 def membership_date(user):
-    return user.joined_at or user.created_at
+    return user.joined_at
 
 
 async def answer_html(message: Message, text: str) -> None:

@@ -1,6 +1,9 @@
+import json
 import os
 import secrets
 from datetime import UTC, datetime
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, skipUnless
 
 from sqlalchemy import delete, func, inspect, select, text
@@ -14,7 +17,7 @@ from app.database.repositories.message_attachments import (
 )
 from app.database.repositories.messages import MessageRepository
 from app.database.repositories.users import UserRepository
-from app.services.importer import synchronize_user_statistics
+from app.services.importer import import_telegram_json, synchronize_user_statistics
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
@@ -219,6 +222,65 @@ class DatabaseIntegrationTest(IsolatedAsyncioTestCase):
         self.assertEqual(user.replies_count, 1)
         self.assertEqual(user.media_count, 1)
         self.assertEqual(user.last_message_at, datetime(2026, 9, 7, tzinfo=UTC))
+
+    async def test_json_import_is_idempotent_and_restores_join_date(self) -> None:
+        export_chat_id = secrets.randbelow(999_999_999) + 1
+        self.chat_id = -(1_000_000_000_000 + export_chat_id)
+        joined_timestamp = 1_788_264_000
+        export = {
+            "id": export_chat_id,
+            "type": "private_supergroup",
+            "name": "Integration chat",
+            "messages": [
+                {
+                    "id": 1,
+                    "type": "service",
+                    "date": "2026-09-01T12:00:00",
+                    "date_unixtime": str(joined_timestamp),
+                    "actor": "Imported User",
+                    "actor_id": f"user{self.telegram_id}",
+                    "action": "join_group_by_link",
+                },
+                {
+                    "id": 2,
+                    "type": "message",
+                    "date": "2026-09-02T12:00:00",
+                    "date_unixtime": "1788350400",
+                    "from": "Imported User",
+                    "from_id": f"user{self.telegram_id}",
+                    "text": "Original",
+                },
+            ],
+        }
+
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "result.json"
+            path.write_text(json.dumps(export), encoding="utf-8")
+            first_result = await import_telegram_json(path, self.sessions)
+
+            export["messages"][1]["text"] = "Edited"
+            path.write_text(json.dumps(export), encoding="utf-8")
+            second_result = await import_telegram_json(path, self.sessions)
+
+        async with self.sessions() as session:
+            user = await session.scalar(
+                select(User).where(User.telegram_id == self.telegram_id)
+            )
+            messages = list(
+                (
+                    await session.execute(
+                        select(Message).where(Message.chat_id == self.chat_id)
+                    )
+                ).scalars()
+            )
+
+        self.assertEqual(first_result["messages"], 1)
+        self.assertEqual(second_result["messages"], 0)
+        self.assertEqual(first_result["membership_dates"], 1)
+        self.assertEqual(user.joined_at, datetime.fromtimestamp(joined_timestamp, UTC))
+        self.assertEqual(user.messages_count, 1)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].text, "Edited")
 
     async def test_membership_dates_are_persisted(self) -> None:
         joined_at = datetime(2026, 8, 1, tzinfo=UTC)

@@ -104,8 +104,6 @@ class StatisticsRepository(BaseRepository):
     ):
 
         border = datetime.now(UTC) - timedelta(days=days)
-        membership_date = func.coalesce(User.joined_at, User.created_at)
-
         subquery = (
             select(
                 Message.user_id,
@@ -132,7 +130,7 @@ class StatisticsRepository(BaseRepository):
                 and_(
                     subquery.c.messages > 0,
                     subquery.c.last_message < border,
-                    membership_date < border,
+                    (User.joined_at.is_(None)) | (User.joined_at < border),
                     User.is_member.is_(True),
                     User.is_bot.is_(False),
                 )
@@ -151,14 +149,14 @@ class StatisticsRepository(BaseRepository):
         limit: int,
     ):
 
-        membership_date = func.coalesce(User.joined_at, User.created_at)
         stmt = (
             select(User)
             .where(
                 User.is_member.is_(True),
                 User.is_bot.is_(False),
+                User.joined_at.is_not(None),
             )
-            .order_by(membership_date)
+            .order_by(User.joined_at)
             .limit(limit)
         )
 
@@ -173,16 +171,15 @@ class StatisticsRepository(BaseRepository):
 
         border = datetime.now(UTC) - timedelta(days=days)
 
-        membership_date = func.coalesce(User.joined_at, User.created_at)
         stmt = (
             select(User)
             .where(
-                membership_date >= border,
+                User.joined_at >= border,
                 User.is_member.is_(True),
                 User.is_bot.is_(False),
             )
             .order_by(
-                membership_date.desc(),
+                User.joined_at.desc(),
             )
         )
 
