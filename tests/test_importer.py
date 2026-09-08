@@ -172,3 +172,26 @@ class ImporterParserTest(TestCase):
         result = analyze_membership_events(messages)
 
         self.assertEqual(set(result.left_at_by_user), {77})
+
+    def test_rejoin_after_leave_invalidates_old_departure_date(self):
+        messages = [
+            {
+                "type": "service",
+                "action": "remove_members",
+                "actor": "Returning User",
+                "actor_id": "user42",
+                "members": ["Returning User"],
+                "date": "2026-08-01T12:00:00",
+            },
+            {
+                "type": "service",
+                "action": "join_group_by_link",
+                "actor": "Returning User",
+                "actor_id": "user42",
+                "date": "2026-09-01T12:00:00",
+            },
+        ]
+
+        result = analyze_membership_events(messages)
+
+        self.assertEqual(result.left_at_by_user, {})

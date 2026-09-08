@@ -97,11 +97,15 @@ def analyze_membership_events(
             _add_alias(aliases, item.get("actor"), item.get("actor_id"))
 
     analysis = MembershipAnalysis()
+    latest_join_at: dict[int, datetime] = {}
 
     def record(telegram_id: int, joined_at: datetime) -> None:
         previous = analysis.joined_at_by_user.get(telegram_id)
         if previous is None or joined_at < previous:
             analysis.joined_at_by_user[telegram_id] = joined_at
+        latest = latest_join_at.get(telegram_id)
+        if latest is None or joined_at > latest:
+            latest_join_at[telegram_id] = joined_at
 
     for item in messages:
         if item.get("type") != "service":
@@ -165,6 +169,12 @@ def analyze_membership_events(
             else:
                 analysis.unmatched_invites += 1
 
+    analysis.left_at_by_user = {
+        telegram_id: left_at
+        for telegram_id, left_at in analysis.left_at_by_user.items()
+        if latest_join_at.get(telegram_id, datetime.min.replace(tzinfo=UTC))
+        < left_at
+    }
     return analysis
 
 
@@ -188,6 +198,7 @@ def analyze_telegram_json(path: str | Path) -> dict[str, int]:
         "users_with_join_date": len(membership.joined_at_by_user),
         "leave_events": membership.leave_events,
         "resolved_leaves": membership.resolved_leaves,
+        "users_with_departure_date": len(membership.left_at_by_user),
     }
 
 
