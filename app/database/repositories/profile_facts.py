@@ -21,3 +21,33 @@ class ProfileFactRepository(BaseRepository[ProfileFact]):
             )
         )
         return (await self.db.execute(stmt)).all()
+
+    async def get_by_id(self, fact_id: int) -> ProfileFact | None:
+        stmt = select(ProfileFact).where(ProfileFact.id == fact_id)
+        return (await self.db.execute(stmt)).scalar_one_or_none()
+
+    async def verify(self, fact: ProfileFact) -> ProfileFact:
+        fact.verified = True
+        fact.inferred = False
+        fact.confidence = 1
+        self.db.add(fact)
+        await self.db.flush()
+        await self.db.refresh(fact)
+        return fact
+
+    async def update_value(self, fact: ProfileFact, value: str) -> ProfileFact:
+        fact.value = value
+        fact.source_type = "admin_edit"
+        fact.source_key = f"admin:{fact.id}"
+        fact.source_message_id = None
+        fact.verified = True
+        fact.inferred = False
+        fact.confidence = 1
+        self.db.add(fact)
+        await self.db.flush()
+        await self.db.refresh(fact)
+        return fact
+
+    async def delete(self, fact: ProfileFact) -> None:
+        await self.db.delete(fact)
+        await self.db.flush()

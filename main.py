@@ -32,6 +32,7 @@ def configure_middlewares(dp: Dispatcher) -> None:
     dp.edited_message.outer_middleware(MessagePersistenceMiddleware())
 
     dp.chat_member.middleware(DatabaseMiddleware())
+    dp.callback_query.middleware(DatabaseMiddleware())
 
 
 def create_dispatcher() -> Dispatcher:

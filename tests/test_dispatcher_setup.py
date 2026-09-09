@@ -26,6 +26,7 @@ class DispatcherSetupTest(TestCase):
             message=MiddlewareRecorder(),
             edited_message=MiddlewareRecorder(),
             chat_member=MiddlewareRecorder(),
+            callback_query=MiddlewareRecorder(),
         )
 
         configure_middlewares(dispatcher)
@@ -41,4 +42,8 @@ class DispatcherSetupTest(TestCase):
         self.assertEqual(
             [type(item) for item in dispatcher.update.inner],
             [ErrorMiddleware],
+        )
+        self.assertEqual(
+            [type(item) for item in dispatcher.callback_query.inner],
+            [DatabaseMiddleware],
         )
