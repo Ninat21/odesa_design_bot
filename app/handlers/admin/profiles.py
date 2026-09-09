@@ -265,6 +265,34 @@ async def verify_profile_fact(
 
 
 @router.callback_query(F.data.startswith("pf:delete:"))
+async def request_profile_fact_delete(
+    callback: CallbackQuery,
+    services: ServiceFactory,
+) -> None:
+    fact = await load_fact(callback, services)
+    if fact is None:
+        return
+    if callback.message is not None:
+        await callback.message.edit_reply_markup(
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="Так, видалити",
+                            callback_data=f"pf:destroy:{fact.id}",
+                        ),
+                        InlineKeyboardButton(
+                            text="Скасувати",
+                            callback_data=f"pf:cancel:{fact.id}",
+                        ),
+                    ]
+                ]
+            )
+        )
+    await callback.answer("Підтвердьте видалення")
+
+
+@router.callback_query(F.data.startswith("pf:destroy:"))
 async def delete_profile_fact(
     callback: CallbackQuery,
     services: ServiceFactory,
@@ -276,6 +304,18 @@ async def delete_profile_fact(
     await services.profiles.delete_fact(fact)
     await refresh_callback_card(callback, services, user_id)
     await callback.answer("Факт видалено")
+
+
+@router.callback_query(F.data.startswith("pf:cancel:"))
+async def cancel_profile_fact_delete(
+    callback: CallbackQuery,
+    services: ServiceFactory,
+) -> None:
+    fact = await load_fact(callback, services)
+    if fact is None:
+        return
+    await refresh_callback_card(callback, services, fact.user_id)
+    await callback.answer("Видалення скасовано")
 
 
 @router.callback_query(F.data.startswith("pf:edit:"))
